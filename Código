@@ -1,0 +1,26 @@
+import pandas as pd
+
+# Carregar os dados do Excel
+file_path = r'C:\Users\pfonseca\Downloads\Carteiras FreshSales\Oportunidades Cassius.xlsx'  # Substitua pelo caminho do seu arquivo
+df = pd.read_excel(file_path, sheet_name='Oportunidades Cassius')
+
+# Criar uma cópia para processamento
+df_processed = df.copy()
+
+# Iterar sobre as linhas e associar descrições não associadas com a linha anterior onde houver 'Usuário de cadastro' preenchido
+last_user_index = None
+for index, row in df.iterrows():
+    if pd.notna(row['Usuário de cadastro']):
+        last_user_index = index  # Atualizar o índice da última linha válida com 'Usuário de cadastro'
+    elif pd.isna(row['Usuário de cadastro']) and pd.notna(row['Descrição']) and last_user_index is not None:
+        # Associar a descrição da linha atual à linha com 'Usuário de cadastro', usando '---' como separador
+        df_processed.at[last_user_index, 'Descrição'] += f" --- {str(row['Descrição'])}"
+        # Limpar a linha atual já que a descrição foi movida
+        df_processed.at[index, 'Descrição'] = None
+
+# Remover as linhas que ficaram com Descrição vazia após o movimento
+df_processed = df_processed[df_processed['Descrição'].notna()]
+
+# Salvar o resultado em um novo arquivo Excel
+output_path = r'C:\Users\pfonseca\Downloads\Carteiras FreshSales\Python\Oportunidades Cassius.xlsx'  # Substitua pelo caminho desejado
+df_processed.to_excel(output_path, index=False)
